@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Crop-Making Protocol — Tomogram Datasets</title>
+<style>
+  :root { --ink:#1c1c1c; --muted:#5a5a5a; --line:#e2e2e2; --accent:#2a5d8f; --flag-bg:#fff7e6; --flag-line:#e0a92b; }
+  * { box-sizing:border-box; }
+  body {
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+    color:var(--ink); line-height:1.65; max-width:760px; margin:0 auto;
+    padding:2.5rem 1.4rem 5rem; font-size:17px; background:#fff;
+  }
+  h1 { font-size:1.7rem; line-height:1.25; margin:0 0 .3rem; }
+  .sub { color:var(--muted); margin:0 0 1.6rem; font-size:.95rem; }
+  h2 {
+    font-size:1.25rem; margin:2.6rem 0 .9rem; padding-bottom:.35rem;
+    border-bottom:2px solid var(--line); color:var(--accent);
+  }
+  h3 { font-size:1.05rem; margin:1.8rem 0 .5rem; }
+  p { margin:.6rem 0; }
+  ol, ul { margin:.6rem 0 .6rem; padding-left:1.4rem; }
+  ol li, ul li { margin:.55rem 0; }
+  ol.steps { counter-reset:step; list-style:none; padding-left:0; }
+  ol.steps > li {
+    counter-increment:step; position:relative; padding:.2rem 0 .9rem 2.6rem;
+    border-bottom:1px solid var(--line);
+  }
+  ol.steps > li:last-child { border-bottom:none; }
+  ol.steps > li::before {
+    content:counter(step); position:absolute; left:0; top:.1rem;
+    width:1.8rem; height:1.8rem; background:var(--accent); color:#fff;
+    border-radius:50%; display:flex; align-items:center; justify-content:center;
+    font-size:.9rem; font-weight:600;
+  }
+  code { background:#f3f4f6; padding:.08em .35em; border-radius:4px; font-size:.92em; }
+  .flag {
+    background:var(--flag-bg); border-left:4px solid var(--flag-line);
+    padding:.75rem 1rem; margin:.8rem 0; border-radius:0 6px 6px 0; font-size:.95rem;
+  }
+  .flag strong { color:#a9750a; }
+  nav { background:#f7f8fa; border:1px solid var(--line); border-radius:8px; padding:1rem 1.2rem; margin-bottom:1rem; }
+  nav p { margin:0 0 .4rem; font-weight:600; font-size:.9rem; color:var(--muted); text-transform:uppercase; letter-spacing:.03em; }
+  nav a { color:var(--accent); text-decoration:none; display:block; margin:.25rem 0; }
+  nav a:hover { text-decoration:underline; }
+  .tip { color:var(--muted); font-size:.93rem; }
+</style>
+</head>
+<body>
+
+<h1>Crop-Making Protocol — Tomogram Datasets</h1>
+<p class="sub">Reconstructed from Grace's walkthrough · captured by voice transcription · drafted 24 June 2026</p>
+
+<p>This is the end-to-end procedure Grace demonstrated for making ER/organelle crops from collaborator tomogram datasets, using <strong>Fileglancer</strong>, <strong>Neuroglancer</strong>, and <strong>Amira</strong>. The flow is: locate the dataset → define the ROI → cut the crop in Amira → verify it lines up → file a GitHub issue for the annotators.</p>
+
+<nav>
+  <p>Jump to</p>
+  <a href="#prep">0. Before you start</a>
+  <a href="#open">1. Open the dataset in Neuroglancer</a>
+  <a href="#roi">2. Get the ROI (bounding box)</a>
+  <a href="#amira">3. Make the crop in Amira</a>
+  <a href="#clean">4. Clean up the crop edges</a>
+  <a href="#export">5. Export the crop to Zarr</a>
+  <a href="#verify">6. Verify it lines up in Neuroglancer</a>
+  <a href="#save">7. Save and name the Amira project</a>
+  <a href="#github">8. File the GitHub issue for annotators</a>
+  <a href="#cycle">9. The annotation cycle (what happens next)</a>
+  <a href="#verify-section">Notes &amp; open follow-ups</a>
+</nav>
+
+<h2 id="prep">0. Before you start</h2>
+<p>Collaborators place their dataset in their own designated Drive folder, and it then shows up in Fileglancer. Per Gudrun's policy, labs hold onto their own data rather than copying it into a PTR drive.</p>
+<ul>
+  <li><strong>Permissions:</strong> you need both <em>read and write</em> on the collaborator's folder. Labs often grant read-only and forget write — chase this early, it's a common source of delay.</li>
+  <li><strong>Fileglancer paths are Linux-style.</strong> Don't paste a Windows path. Use the directory shown under <strong>cluster / Linux</strong>, not the Windows mount.</li>
+  <li><strong>Browser quirk:</strong> Fileglancer sometimes misbehaves in Chrome. If it's acting up, try a different browser or clear the cache before assuming a real problem.</li>
+</ul>
+
+<h2 id="open">1. Open the dataset in Neuroglancer</h2>
+<ol class="steps">
+  <li>In Fileglancer, navigate to the collaborator's drive and into their designated folder. (Example given: a FuncEworm dataset — drill down through the folder ending in the dataset name, into the <code>recon</code> folder, until the thumbnail appears.)</li>
+  <li>Click the thumbnail and choose <strong>Open with Neuroglancer</strong>.</li>
+  <li>Neuroglancer loads the full EM/tomogram volume.</li>
+</ol>
+
+<h2 id="roi">2. Get the ROI (bounding box)</h2>
+<p>Two cases, depending on the collaborator:</p>
+<p><strong>If they give you the ROIs</strong> (some draw bounding boxes; some give coordinates directly) — use what they send. If they want to draw them, walk them through:</p>
+<ol class="steps">
+  <li>Create a new tab in Neuroglancer.</li>
+  <li>Go to <strong>local → annotate</strong>, tick the annotation box, and switch the type to <strong>annotation</strong> — this creates a new annotations tab.</li>
+  <li>In that tab, click the <strong>bounding-box annotate</strong> icon.</li>
+  <li><code>Ctrl + left-click + drag</code> to start the box, scroll to navigate through depth, then <code>Ctrl + left-click</code> again at the far corner to close the box.</li>
+  <li>Read off the <strong>XYZ coordinates</strong> it displays — those go into Amira to cut the crop.</li>
+</ol>
+<p><strong>If they don't give ROIs</strong> — scroll through the volume yourself, find a good region, draw the box the same way, and use those coordinates.</p>
+
+<div class="flag">
+  <strong>Watch the axis order.</strong> Coordinates come out as <code>XYZ</code> on some datasets and <code>ZYX</code> on others — it depends on the data. Confirm the order before you trust the numbers. (In the live example, the dataset was ZYX while Amira expected XYZ, which caused a mismatch.)
+</div>
+
+<h2 id="amira">3. Make the crop in Amira</h2>
+<ol class="steps">
+  <li>Open a new Amira project.</li>
+  <li>Open any recent dataset as a <strong>placeholder</strong> (you'll delete it later).</li>
+  <li>Right-click the placeholder → <strong>Python scripts → Zarr Read → Create</strong>.</li>
+  <li>For the <strong>input directory</strong>, navigate to the folder holding the <code>.zarr</code> files.</li>
+  <li>Pick your resolution level. <code>s0</code> is the <strong>highest</strong> resolution; the number climbs as resolution drops (<code>s6</code> is lowest in the example). Fileglancer shows <code>s0</code> coordinates.</li>
+  <li>Set the X, Y, Z limits from your ROI coordinates.</li>
+</ol>
+
+<div class="flag">
+  <strong>Resolution scaling — the fiddly part.</strong> Fileglancer reports coordinates at <code>s0</code>. If you cut at a lower resolution (e.g. <code>s1</code>), you must divide the coordinates by the right factor. The <code>.zattrs</code> / attributes file is supposed to tell you the divisor per level, but Grace finds it unreliable. Her practical method: <strong>start dividing by 2; if the crop doesn't light up in the right place, try 4, then 6 (or 8).</strong> Scaling usually follows a power series — <code>2, 4, 6, 8</code> or <code>4, 8, 16, 32</code>. If you cut at <code>s0</code> (highest res), use the raw numbers with no division.
+  <br><br>
+  <strong>This convention varies by team</strong> — each team does it slightly differently, but a given team stays consistent. Track each team's divisor convention (you're planning a spreadsheet for this).
+</div>
+
+<h2 id="clean">4. Clean up the crop edges</h2>
+<p>Once the crop is made, inspect it in Amira and confirm you're looking at the right region.</p>
+<p>If the crop includes structures that are tricky to annotate or regions you want the annotators to avoid, trim them off so they don't cause problems downstream:</p>
+<ol class="steps">
+  <li>Identify the unwanted region (example: looking at the XY plane, an unwanted slab at the ends of the Z stack).</li>
+  <li>Go to <strong>project</strong> and shift/move the volume slightly so those end slices are excluded.</li>
+  <li>Repeat until the crop contains only what you want annotated.</li>
+</ol>
+
+<h2 id="export">5. Export the crop to Zarr</h2>
+<div class="flag">
+  <strong>Export from the LABELS, not the raw data.</strong> Right-click the <em>labels</em> object → <strong>Python scripts → (Zarr write) → Create</strong>. If you export the raw image instead, any segmentation work won't come along. The team uses one shared output Zarr for both crop-making and labels — there is no separate crop-only file.
+</div>
+<ol class="steps">
+  <li>Right-click the <strong>labels</strong> object (not raw data) → Python scripts → Create.</li>
+  <li>Set the <strong>output directory</strong>. Keep the Amira file and the exported segmentations together in <strong>one folder</strong> — different labs want crops saved in different directories, so consolidating avoids confusion.</li>
+  <li><strong>Name the output folder ending in <code>.zarr</code></strong> — Zarr write only writes to a folder with that extension. Create the folder, select it, apply.</li>
+  <li>Wait for "save complete."</li>
+</ol>
+
+<h2 id="verify">6. Verify it lines up in Neuroglancer</h2>
+<ol class="steps">
+  <li>In Fileglancer, find the label you just exported (under the PTR/Neuroglancer area).</li>
+  <li>Open it in Neuroglancer, right-click → <strong>copy source</strong>.</li>
+  <li>Create a new tab, paste the source, and <strong>import as segmentation</strong>.</li>
+  <li>Right-click → <strong>annotate</strong>, then right-click to jump directly to where the crop sits.</li>
+  <li>Confirm the crop lands where the ROI was. If it lines up, the crop succeeded.</li>
+</ol>
+
+<h2 id="save">7. Save and name the Amira project</h2>
+<ol class="steps">
+  <li>Delete the placeholder file — you don't need it anymore. You should be left with the raw data and the label.</li>
+  <li><strong>File → Save Project</strong>, choose the second option: <strong>minimize project computation</strong>, confirm OK.</li>
+  <li>Save the project into the <strong>same folder</strong> as the exported Zarr.</li>
+  <li>Rename the Amira files so naming is consistent everywhere (the example renamed to match the dataset + crop, e.g. <code>Pancreas5_soma_7</code> style).</li>
+  <li>Copy the saved directory path — you'll paste it into the GitHub issue so annotators know where to look.</li>
+</ol>
+
+<h3>Naming convention</h3>
+<p>Grace's scheme (flexible — scientists generally don't specify): <code>DatasetName (what's annotated) N</code></p>
+<ul>
+  <li><strong>Dataset name</strong> — as it appears in Fileglancer / as the collaborator gave it.</li>
+  <li><strong>In parentheses</strong> — what must be annotated in that crop (e.g. <em>soma</em>, <em>endocrine</em>). A soma crop shows only soma; an endocrine crop only endocrine.</li>
+  <li><strong>Trailing number</strong> — which crop it is in the series (10th, 11th, etc.). Check GitHub for the current count and continue from there.</li>
+</ul>
+
+<h2 id="github">8. File the GitHub issue for annotators</h2>
+<p>Shorten the Neuroglancer URL first — Neuroglancer stores all state in the URL, so it gets too long to paste around. Paste the long link into the shortener, click the blue button, and copy the short version.</p>
+<ol class="steps">
+  <li>Open a new GitHub issue for the annotators.</li>
+  <li>Paste the <strong>shortened Neuroglancer link</strong> into the issue body and into the dedicated column for easy access.</li>
+  <li>Add the <strong>Amira project directory path</strong> (so they know where the crop lives).</li>
+  <li>State <strong>what to annotate</strong> — you don't always annotate everything in a crop (sometimes just ER, sometimes just one organelle). For this example: "annotate soma in this crop."</li>
+  <li>Include the <strong>project code</strong>.</li>
+  <li>Include the <strong>Fileglancer link</strong> so annotators can see context <em>outside</em> the crop and identify structures more easily.</li>
+  <li>Once every field is filled, move the issue to the <strong>annotation queue</strong>.</li>
+</ol>
+
+<h2 id="cycle">9. The annotation cycle (what happens next)</h2>
+<ol class="steps">
+  <li>An available annotator assigns themselves and moves status from <strong>Annotation</strong> → <strong>In Progress Annotation</strong> (so you can see what's being worked on).</li>
+  <li>When their first pass is done, they put it on the <strong>screening queue</strong> and unassign.</li>
+  <li>A second person assigns themselves, screens it, screenshots what needs separating vs. re-annotating, assigns it <strong>back to the original annotator</strong>, and sets it to <strong>Fix</strong>.</li>
+  <li>This loop repeats until nothing is left to fix.</li>
+  <li>You give the <strong>final check</strong>: confirm the Zarr is exported to the right place, everything opens correctly in Fileglancer/Neuroglancer.</li>
+  <li>Notify the collaborators that the crop is ready.</li>
+</ol>
+<p class="tip">Grace tracks work she still owes under a "Coming Soon" status as a personal reminder (e.g. pancreas crops still to make for Solange).</p>
+
+<h2 id="verify-section">Notes &amp; open follow-ups</h2>
+<p>Transcription terms are now confirmed. A few operational follow-ups remain:</p>
+<ul>
+  <li><strong>Resolution scaling differs by team.</strong> Each team handles the s0→lower-res coordinate divisor slightly differently, but a given team is consistent throughout — so it's a per-team thing to track, not a universal rule. Grace does the math by hand. <strong>Action (you):</strong> build a spreadsheet to track each team's resolution/divisor convention.</li>
+  <li><strong>URL shortener</strong> — appears to be a tool built specifically for Neuroglancer links (paste link → blue button → short URL). <strong>Action:</strong> ask Grace which service it is and record the name here.</li>
+  <li><strong>Workstation</strong> — confirmed this is <strong>Sana's</strong> computer (downstairs). <strong>Action (you):</strong> still needs to be set up — verify/install Amira + the Zarr tooling before first use.</li>
+</ul>
+<p class="tip">Resolved from the recording: the mid-call axis "mismatch" (Y ending at 2420 vs. expected ~3000) was just a wrong number entered under nerves, not a real data issue. Neuroglancer/Fileglancer term splits, the Pancreas5 dataset, Solange, the FuncEworm <code>recon</code> path, and the "minimize project computation" save option are all confirmed.</p>
+
+</body>
+</html>

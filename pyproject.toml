@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "crop-tool"
+version = "0.1.0"
+description = "Cut crops from OME-Zarr tomogram volumes without going through Amira"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "zarr>=3.1.1",
+    "numpy>=1.26",
+    "numcodecs>=0.14",
+    "ome-zarr-models==1.7",
+]
+
+[project.scripts]
+zarr-crop = "crop_tool.cli:main"
+
+[project.optional-dependencies]
+test = ["pytest"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

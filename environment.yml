@@ -1,0 +1,25 @@
+# Environment for the zarr-crop tool.
+#
+# conda-forge only -- no Anaconda "defaults" channel, so no commercial
+# licensing question. This mirrors what CellMap does elsewhere (see the
+# cellmap-segmentation-challenge README, which also recommends micromamba).
+#
+# Dependency versions follow the pins in the Amira plugin's installer
+# (install_zarr_extensions.bat) so that behavior matches what ZarrRead and
+# ZarrWrite do, with two differences:
+#   - tensorstore is omitted; we access data with zarr-python instead.
+#   - numpy is not pinned to 1.26.4. That pin exists for compatibility with
+#     Amira's embedded interpreter, which we are not running inside.
+name: crop_tool
+channels:
+  - conda-forge
+dependencies:
+  - python=3.12
+  - zarr=3.1.5
+  - numpy>=1.26
+  - numcodecs
+  - pydantic
+  - pytest
+  - pip
+  - pip:
+      - ome-zarr-models==1.7
